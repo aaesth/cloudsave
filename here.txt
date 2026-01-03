@@ -1,0 +1,6 @@
+app_path=C:\Windows\System32\notepad.exe
+sftp_ip=
+sftp_user=
+sftp_pass=
+sftp_dir=/backup
+local_dir=./data
