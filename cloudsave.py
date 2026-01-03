@@ -13,7 +13,7 @@ def load_config():
         for line in f:
             if '=' in line:
                 key, value = line.strip().split('=', 1)
-                config[key] = value
+                config[key] = value.strip('"')
     return config
 
 def download_and_unzip(config):
@@ -47,17 +47,22 @@ def zip_and_upload(config):
                 if os.path.exists(file_path):
                     zipf.write(file_path, file)
     
+    print(f"created zip with files: {zipfile.ZipFile(zip_name, 'r').namelist()}")
+    
     try:
         ssh = SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(config['sftp_ip'], username=config['sftp_user'], password=config['sftp_pass'])
         
+        # make sure the remote dir workks
+        ssh.exec_command(f'mkdir -p {config["sftp_dir"]}')
+        
         with SCPClient(ssh.get_transport()) as scp:
             remote_path = os.path.join(config['sftp_dir'], zip_name)
+            print(f"Uploading to {remote_path}")
             scp.put(zip_name, remote_path)
 
         ssh.close()
-        os.remove(zip_name)
         print("zipped and uploaded backup.")
     except Exception as e:
         print(f"failed to upload backup: {e}")
